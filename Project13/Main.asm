@@ -17,13 +17,25 @@ arr db 100 dup(?)
 .code
 main PROC
 	mov edx, offset arr
-	push edx 
-	push 5 ; len
-	push 1 ; step
-	push 97 ; init
-	push 1 ; idx
+	push edx ; arrPtr
+	push 10 ; len
+	push -1 ; step
+	push 110 ; init
+	push 0 ; idx
 
 	call fillArray 
+
+	
+	mov eax, 10
+	pushad
+	call printf
+	popad
+
+	push edx ; arrPtr
+	push 10 ; end
+	push 0 ; begin
+
+	call bubbleSort
 
 	mov eax, 10
 	pushad
@@ -56,6 +68,77 @@ fillArray PROC
 	ret 20       ; return, popping the extra 4 bytes of the arguments in the process
 		
 fillArray ENDP
+
+bubbleSort PROC
+	; in stack - beginIdx, endIdx, arrPtr
+	
+	push ebp
+	mov ebp, esp
+	
+	; eax - start index
+	; ebx - end index
+	; edx - array address
+
+	mov eax, [ebp + 8] ; start
+	mov ebx, [ebp + 12] ; end
+	mov edx, [ebp + 16] ; arr
+
+	mov ecx, 0 ; i
+	dec ebx ; n - 1
+	; j = esi
+	loop1:
+		inc ecx
+		mov esi, ecx
+		dec ecx
+
+		jmp loop2
+
+	loop1_f:
+		inc ecx
+		cmp ecx, ebx
+		jl loop1
+		jge finish
+
+	loop2:	
+		push eax
+		push ebx
+		mov eax, [edx + esi]
+		mov ebx, [edx + ecx]
+
+		cmp eax, ebx
+
+		pop ebx
+		pop eax
+
+		jg swap
+		jle loop2_f
+
+	loop2_f:
+		inc esi
+		sub ebx, ecx
+		cmp ebx, esi
+		add ebx, ecx ; restore
+		jl loop2
+		jge loop1_f
+
+	swap:
+		push eax
+		push ebx
+		
+		mov eax, [edx + esi] ; eax = arr[j]
+		mov ebx, [edx + ecx] ; ebx = arr[i]
+		mov [edx + esi], ebx ; arr[j] = ebx
+		mov [edx + ecx], eax ; arr[i] = eax
+				
+		pop ebx
+		pop eax
+		jmp loop2_f
+	
+	finish:
+		pop ebp
+		ret 12
+
+bubbleSort ENDP
 
 ;scanf PROC	
 ;	invoke	GetStdHandle, STD_INPUT_HANDLE
