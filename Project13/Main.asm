@@ -1,5 +1,5 @@
 .386
-.model flat,stdcall
+.model flat, stdcall
 .stack 4096
 STD_OUTPUT_HANDLE EQU -11
 ; STD_INPUT_HANDLE EQU -10
@@ -20,11 +20,10 @@ main PROC
 	push edx ; arrPtr
 	push 10 ; len
 	push -1 ; step
-	push 110 ; init
+	push 106 ; init
 	push 0 ; idx
 
 	call fillArray 
-
 	
 	mov eax, 10
 	pushad
@@ -46,23 +45,23 @@ main PROC
 main ENDP
 
 fillArray PROC
-	; in stack - index, initial, step, len, arr 
+	; in stack - index, initibh, step, len, arr 
 
 	push ebp        ; save old base pointer
 	mov ebp, esp     ; use the current stack pointer as new base pointer
 
 	mov ecx, [ebp + 8] ; index
-	mov ebx, [ebp + 12] ; initial
+	mov ebx, [ebp + 12] ; initibh
 	mov eax, [ebp + 16] ; step
 	mov esi, [ebp + 20] ; len
 	mov edx, [ebp + 24] ; arr ptr
 	
 	body:
-		mov [edx + ecx], ebx
-		inc ecx
-		add ebx, eax
+		mov [edx + ecx], ebx ; arr[i] = vbh
+		inc ecx ; ++i
+		add ebx, eax ; vbh += step
 		cmp ecx, esi
-		jl body
+		jl body ; if i < n
 
 	pop ebp        ; restore old base pointer
 	ret 20       ; return, popping the extra 4 bytes of the arguments in the process
@@ -83,55 +82,62 @@ bubbleSort PROC
 	mov ebx, [ebp + 12] ; end
 	mov edx, [ebp + 16] ; arr
 
-	mov ecx, 0 ; i
 	dec ebx ; n - 1
-	; j = esi
+	; j = ecx
+	; i = eax
 	loop1:
-		inc ecx
-		mov esi, ecx
-		dec ecx
+		mov ecx, 0 ; j = 0
 
-		jmp loop2
+		jmp loop2 ; start loop2
 
 	loop1_f:
-		inc ecx
-		cmp ecx, ebx
-		jl loop1
+		inc eax ; ++i
+		cmp eax, ebx 
+		jl loop1 ; if i < n - 1
 		jge finish
 
 	loop2:	
 		push eax
 		push ebx
-		mov eax, [edx + esi]
-		mov ebx, [edx + ecx]
 
-		cmp eax, ebx
+		mov ah, [edx + ecx] ; ah = arr[j]
+		inc ecx
+		mov bh, [edx + ecx] ; bh = arr[j + 1]
+		dec ecx
+
+		cmp ah, bh
 
 		pop ebx
 		pop eax
 
-		jg swap
-		jle loop2_f
+		jg swap ; if arr[j] > arr[j + 1]
+		jle loop2_f ; else 
 
 	loop2_f:
-		inc esi
-		sub ebx, ecx
-		cmp ebx, esi
-		add ebx, ecx ; restore
-		jl loop2
+		inc ecx ; ++j
+		;sub ebx, eax ; n - 1 = n - i - 1
+		cmp ecx, ebx
+		;add ebx, eax ; restore
+
+		jl loop2 ; if j < n - i - 1
 		jge loop1_f
 
-	swap:
+	swap:		
 		push eax
 		push ebx
-		
-		mov eax, [edx + esi] ; eax = arr[j]
-		mov ebx, [edx + ecx] ; ebx = arr[i]
-		mov [edx + esi], ebx ; arr[j] = ebx
-		mov [edx + ecx], eax ; arr[i] = eax
-				
+
+		mov ah, [edx + ecx] ; ah = arr[j]
+		inc ecx
+		mov bh, [edx + ecx] ; bh = arr[j + 1]
+		dec ecx
+		mov [edx + ecx], bh ; arr[j] = bh
+		inc ecx
+		mov [edx + ecx], ah ; arr[j + 1] = ah
+		dec ecx
+
 		pop ebx
 		pop eax
+		
 		jmp loop2_f
 	
 	finish:
