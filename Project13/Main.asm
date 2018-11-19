@@ -12,16 +12,20 @@ ExitProcess PROTO, dwExitCode:DWORD
 consoleOutHandle dd ? 
 consoleInHandle dd ?
 bytesWritten dd ?
-arr db 108, 99, 105, 96
+arr db 100 dup(?)
 
 .code
 main PROC
-
-	mov eax, offset arr
-	mov [eax], 107
-
 	mov edx, offset arr
-	mov eax, 4
+	push edx 
+	push 5 ; len
+	push 1 ; step
+	push 97 ; init
+	push 1 ; idx
+
+	call fillArray 
+
+	mov eax, 10
 	pushad
 	call printf
 	popad
@@ -30,7 +34,27 @@ main PROC
 main ENDP
 
 fillArray PROC
+	; in stack - index, initial, step, len, arr 
+
+	push ebp        ; save old base pointer
+	mov ebp, esp     ; use the current stack pointer as new base pointer
+
+	mov ecx, [ebp + 8] ; index
+	mov ebx, [ebp + 12] ; initial
+	mov eax, [ebp + 16] ; step
+	mov esi, [ebp + 20] ; len
+	mov edx, [ebp + 24] ; arr ptr
 	
+	body:
+		mov [edx + ecx], ebx
+		inc ecx
+		add ebx, eax
+		cmp ecx, esi
+		jl body
+
+	pop ebp        ; restore old base pointer
+	ret 20       ; return, popping the extra 4 bytes of the arguments in the process
+		
 fillArray ENDP
 
 ;scanf PROC	
