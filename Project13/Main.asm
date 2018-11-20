@@ -2,43 +2,31 @@
 .model flat, stdcall
 .stack 4096
 STD_OUTPUT_HANDLE EQU -11
-; STD_INPUT_HANDLE EQU -10
+STD_INPUT_HANDLE EQU -10
 GetStdHandle PROTO, nStdHandle: DWORD 
 WriteConsoleA PROTO, handle: DWORD, lpBuffer:PTR BYTE, nNumberOfBytesToWrite:DWORD, lpNumberOfBytesWritten:PTR DWORD, lpReserved:DWORD  
-; ReadConsole PROTO, handle:DWORD, lpBuffer:PTR BYTE, nNumberOfCharsToRead:DWORD, lpNumberOfCharsRead:PTR DWORD, lpInputControl:PTR DWORD	 
+ReadConsoleA PROTO, handle:DWORD, lpBuffer:PTR BYTE, nNumberOfCharsToRead:DWORD, lpNumberOfCharsRead:PTR DWORD, lpInputControl:PTR DWORD	 
 ExitProcess PROTO, dwExitCode:DWORD	
 
 .data
 consoleOutHandle dd ? 
 consoleInHandle dd ?
 bytesWritten dd ?
+bytesRead dd ?
 arr db 100 dup(?)
 
 .code
 main PROC
-	mov edx, offset arr
-	push edx ; arrPtr
-	push 10 ; len
-	push -1 ; step
-	push 106 ; init
-	push 0 ; idx
-
-	call fillArray 
-	
-	mov eax, 10
+	mov ecx, offset arr
+	mov edx, 10
 	pushad
-	call printf
+	call scanf
 	popad
 
-	push edx ; arrPtr
-	push 10 ; end
-	push 0 ; begin
-
-	call bubbleSort
-
+	mov edx, offset arr
 	mov eax, 10
 	pushad
-	call printf
+	call printf	
 	popad
 
 	invoke ExitProcess, 0
@@ -115,12 +103,10 @@ bubbleSort PROC
 
 	loop2_f:
 		inc ecx ; ++j
-		;sub ebx, eax ; n - 1 = n - i - 1
-		cmp ecx, ebx
-		;add ebx, eax ; restore
-
+		cmp ecx, ebx ; compare i and j
+		
 		jl loop2 ; if j < n - i - 1
-		jge loop1_f
+		jge loop1_f ; finish the loop
 
 	swap:		
 		push eax
@@ -146,13 +132,17 @@ bubbleSort PROC
 
 bubbleSort ENDP
 
-;scanf PROC	
-;	invoke	GetStdHandle, STD_INPUT_HANDLE
-;	mov consoleInHandle, eax
-;	pushad
-;	invoke
-;	popad
-;scanf ENDP
+scanf PROC	
+	; ecx - array address
+	; edx - length to read
+
+	invoke GetStdHandle, STD_INPUT_HANDLE
+	mov consoleInHandle, eax
+	pushad
+	invoke ReadConsoleA, consoleInHandle, ecx, edx, offset bytesRead, 0
+	popad
+	ret
+scanf ENDP
 
 printf PROC
 	; edx - string
